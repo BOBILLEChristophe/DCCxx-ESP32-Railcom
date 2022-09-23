@@ -140,9 +140,9 @@ void DCC::setup()
   ptrToClass = this;
   timer = timerBegin(0, 80, true);
   timerAttachInterrupt(timer, timerHandler, true);
-  timerAlarmWrite(timer, 28, true);
+  timerAlarmWrite(timer, 1000000, true);
   timerAlarmEnable(timer);
-}
+} // DCC::setup
 
 void DCC::reset()
 {
@@ -150,7 +150,7 @@ void DCC::reset()
   byte i;
   for (i = 0; i < 5; i++)
     packetFormat(DCC_PACKET_TYPE_RESET, 0xFF, 0, 0);
-}
+} // DCC::reset
 
 void DCC::setThrottle(uint16_t locoAddr, uint8_t locoSpeed, uint8_t locoDir)
 {
@@ -164,7 +164,7 @@ void DCC::setThrottle(uint16_t locoAddr, uint8_t locoSpeed, uint8_t locoDir)
   data |= dccSpeed;
   packetFormat(type, locoAddr, data, 0);
   // Serial.print("data : "); Serial.println(data, BIN);
-}
+} // DCC::setThrottle
 
 void DCC::setFunction(uint16_t locoAddr, byte fByte, byte eByte)
 {
@@ -199,7 +199,7 @@ void DCC::setFunction(uint16_t locoAddr, byte fByte, byte eByte)
   if (locoAddr > 127)
     type |= DCC_PACKET_TYPE_ADDR_LONG;
   packetFormat(type, locoAddr, data, 0);
-}
+} //DCC::setFunction
 
 void DCC::packetFormat(byte type, uint16_t addr, uint16_t data1, uint16_t data2)
 {
@@ -282,7 +282,7 @@ void DCC::packetFormat(byte type, uint16_t addr, uint16_t data1, uint16_t data2)
   }
   *packetPtr = checksum;
   dccAdd(packetData, packetSize, type & DCC_PACKET_TYPE_MODE); // TODO pour PILOT
-} // end packetFormat()
+} // DCC::packetFormat
 
 void DCC::dccAdd(byte *packetData, byte packetSize, byte packetType)
 {
@@ -306,7 +306,7 @@ void DCC::dccAdd(byte *packetData, byte packetSize, byte packetType)
   memcpy(m_packetData[index], packetData, packetSize);
   m_packetType[index] = packetType;
   m_packetSize[index] = packetSize;
-} // end dccAdd()
+} // DCC::dccAdd
 
 void DCC::dumpPackets()
 { // DEBUG
@@ -345,7 +345,7 @@ void DCC::dumpPackets()
       Serial.println();
     }
   }
-}
+} // DCC::dumpPackets
 
 void DCC::clear()
 {
@@ -356,7 +356,7 @@ void DCC::clear()
     m_packetSize[i] = 0;
   }
   m_packetUsed = 0;
-}
+} // DCC::clear
 
 void DCC::parse(char *com, INTERFACE *client)
 {
@@ -392,7 +392,6 @@ void DCC::parse(char *com, INTERFACE *client)
     break;
 
   case 's':
-  case '#':
 
     if (digitalRead(PIN_PWM) == LOW)
       client->print("<p0>");
@@ -414,7 +413,7 @@ void DCC::parse(char *com, INTERFACE *client)
     {
       client->print("WiFi");
       client->print(": ");
-      // client->print(WiFi.localIP());
+      //client->print(WiFi.localIP());
       client->print(">");
     }
 
@@ -423,4 +422,4 @@ void DCC::parse(char *com, INTERFACE *client)
   default:
     return;
   }
-}
+} // DCC::parse

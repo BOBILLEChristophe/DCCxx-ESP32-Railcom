@@ -2,7 +2,7 @@
 #define CONFIG_H
 
 
-#define VERSION "v 1.3"
+#define VERSION "v 1.4"
 #define PROJECT "DCCxx ESP32 WIFI"
 
 // DEFINE COMMUNICATIONS INTERFACE

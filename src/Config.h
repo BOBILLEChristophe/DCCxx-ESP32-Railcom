@@ -14,7 +14,7 @@
 #define PIN_DIR       GPIO_NUM_13   // SIGNAL (DIR)
 #define PIN_BRAKE     GPIO_NUM_14   // CUTOUT (BRAKE)
 
-#define CURRENT_MONITOR_PIN_MAIN    GPIO_NUM_36
+#define CURRENT_MONITOR_PIN_MAIN    GPIO_NUM_35
 
 
 #define WIFI_SSID              "xxxxxxxxxx"

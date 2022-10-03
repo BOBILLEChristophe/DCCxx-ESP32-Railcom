@@ -51,7 +51,7 @@
         Original description from DCC++ BASE STATION a C++ program written by Gregg E. Berman GNU General Public License.
         Original description from Pascal Barlier GNU General Public License
 
-        v 1.3 sept 2022
+        v 1.4 oct 2022
 
 */
 

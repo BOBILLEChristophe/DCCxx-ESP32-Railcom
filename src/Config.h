@@ -2,13 +2,8 @@
 #define CONFIG_H
 
 
-#define VERSION "v 1.4"
-#define PROJECT "DCCxx ESP32 WIFI"
-
-// DEFINE COMMUNICATIONS INTERFACE
-//  0 = Serial Port
-//  1 = Wifi
-#define COMM_INTERFACE   0
+#define VERSION "v 1.5"
+#define PROJECT "DCCxx ESP32 WIFI - RAILCOM"
 
 #define PIN_PWM       GPIO_NUM_12   // ENABLE (PWM)
 #define PIN_DIR       GPIO_NUM_13   // SIGNAL (DIR)
@@ -16,20 +11,32 @@
 
 #define CURRENT_MONITOR_PIN_MAIN    GPIO_NUM_35
 
+/*------------- Configure your own settings ---------------*/
 
-#define WIFI_SSID              "xxxxxxxxxx"
-#define WIFI_PSW               "xxxxxxxxxx"
+// Define communication interface : 0 = Serial Port, 1 = Wifi
+#define COMM_INTERFACE   1   // Select mode
+//-----------------------------------------------------------
+#if COMM_INTERFACE == 0      // USB serial
+#define INTERFACE HardwareSerial
 
-#if COMM_INTERFACE == 0
-  #define INTERFACE HardwareSerial
-#elif COMM_INTERFACE == 1
-  #include <WiFi.h>
-  #define INTERFACE   WiFiClient
-  #define LOCAL_IP    192,168,1,200
-  #define PORT        2560
-#endif 
+#elif COMM_INTERFACE == 1    // WiFi
+#include <WiFi.h>
+#define INTERFACE       WiFiClient
 
-#define PRINT_CURRENT false
+//------ If WiFi, replace with your network credentials -----
+//#define WIFI_SSID              "REPLACE_WITH_YOUR_SSID"
+//#define WIFI_PSW               "REPLACE_WITH_YOUR_PASSWORD"
+#define WIFI_SSID              "Livebox-72E0"
+#define WIFI_PSW               "aeyaDzhmCrRU2RSFzD"
+
+#define LOCAL_IP        192,168,1,200
+#define LOCAL_GATEWAY   192,168,1,1
+#define SUBNET          255,255,255,0
+#define PORT            2560
+#endif
+/*----------------------------------------------------------*/
+
+#define PRINT_CURRENT true
 
 #define DCC_CUT_0 0 // Les deux états de l'automate cutout
 #define DCC_CUT_1 1

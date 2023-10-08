@@ -25,7 +25,7 @@
   - 100 -> la vitesse en pas (sur un maxi de 128) Pour des raisons de simplification, seul le protocole à 128 crans est implanté
   - 1 -> la direction (1 = sens avant, 0 = sens arrière)
 
-  Une commande de traction s'écrit de la manière suivante : <f 31 144>
+  Une commande de fonction s'écrit de la manière suivante : <f 31 144>
   //      128 à 159 => F0_F4
   //      176 à 191 => F5_F8
   //      160 à 175 => F9_F12

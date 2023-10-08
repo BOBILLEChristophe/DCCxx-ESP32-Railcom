@@ -6,8 +6,6 @@ Ce programme permet la réalisation d'une station de commande DCC qui génère l
    IL NE FONCTIONNE QUE SUR UN ENVIRONNEMENT ESP32
    *******************************************************
 
-   Il reprend pour une part du programme publié par Pascal Barlier ici :
-   https://github.com/EditionsENI/Arduino-et-le-train/tree/master/V2/arduino/at-multi2
 
    Il a été écrit sur la base de classes C++ pour pouvoir intégrer facilement les évolutions futures : commandes de fonctions, réglages et lecture de CVs...
 
@@ -22,7 +20,7 @@ Ce programme permet la réalisation d'une station de commande DCC qui génère l
   - 100 -> la vitesse en pas (sur un maxi de 128) Pour des raisons de simplification, seul le protocole à 128 crans est implanté
   - 1 -> la direction (1 = sens avant, 0 = sens arrière)
 
-  Une commande de traction s'écrit de la manière suivante : <f 31 144>
+  Une commande de fonction s'écrit de la manière suivante : <f 31 144>
   //      128 à 159 => F0_F4
   //      176 à 191 => F5_F8
   //      160 à 175 => F9_F12

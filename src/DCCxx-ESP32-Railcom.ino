@@ -67,7 +67,7 @@
 #include "CurrentMonitor.h"
 
 #ifdef CAN_INTERFACE
-#include <ACAN_ESP32.h>
+#include <ACAN_ESP32.h> // https://github.com/pierremolinaro/acan-esp32
 #endif
 
 // Mesure de courant

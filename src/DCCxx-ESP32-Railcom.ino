@@ -38,9 +38,10 @@
   Cette station n'a pour l'instant été testée qu'avec la carte moteur LMD18200 et adopte le brochage de DCC++ pour la voie principale (main)
   Par défaut dans ce programme, le brochage est :
 
-  #define PIN_PWM       GPIO_NUM_12   // ENABLE (PWM)
-  #define PIN_DIR       GPIO_NUM_13   // SIGNAL (DIR)
-  #define PIN_BRAKE     GPIO_NUM_14   // CUTOUT (BRAKE)
+  #define PIN_PWM       GPIO_NUM_12               // ENABLE (PWM)
+  #define PIN_DIR       GPIO_NUM_13               // SIGNAL (DIR)
+  #define PIN_BRAKE     GPIO_NUM_14               // CUTOUT (BRAKE)
+  #define CURRENT_MONITOR_PIN_MAIN  GPIO_NUM_36   // Mesure de courant
 
 ****************************************************************************************************************************************
   ATTENTION à parametrer le protection de courant à une valeur correspondant à votre configuration
@@ -56,6 +57,7 @@
         v 1.8 - 15 mars 2023  : Ajout de eStop, fonction emergency()
         v 1.9 - 23 mars 2023  : Optimisation du code
         v 2.0 - 09 oct 2023   : Correction bug sur pointeur CLIENT en TCP (WiFi)
+        v 2.1 - 09 oct 2023   : Modification de CURRENT_MONITOR_PIN_MAIN  sur GPIO_NUM_36
 */
 
 #ifndef ARDUINO_ARCH_ESP32
@@ -94,9 +96,10 @@ void setup()
   Serial.begin(115200);
   while (!Serial)
     ;
-  Serial.printf("\n\nProject :      %s\n", PROJECT);
-  Serial.printf("\nVersion   :      %s\n", VERSION);
-  Serial.printf("\nFichier   :      %s\n", __FILE__);
+  Serial.printf("\n\nProject :    %s", PROJECT);
+  Serial.printf("\nVersion :      %s", VERSION);
+  Serial.printf("\nAuthor :       %s", AUTHOR);
+  Serial.printf("\nFichier :      %s", __FILE__);
   Serial.printf("\nCompiled  :      %s - %s \n\n", __DATE__, __TIME__);
 
 #ifdef CAN_INTERFACE

@@ -3,6 +3,7 @@
 
 #define PROJECT "DCCxx ESP32 WIFI - RAILCOM"
 #define VERSION "v 2.1"
+#define AUTHOR  "christophe BOBILLE Locoduino : christophe.bobille@gmail.com"
 
 #define PIN_PWM GPIO_NUM_12                  // ENABLE (PWM)
 #define PIN_DIR GPIO_NUM_13                  // SIGNAL (DIR)

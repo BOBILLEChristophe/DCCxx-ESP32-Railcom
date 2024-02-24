@@ -2,7 +2,7 @@
 #define CONFIG_H
 
 #define PROJECT "DCCxx ESP32 WIFI - RAILCOM"
-#define VERSION "v 2.1"
+#define VERSION "v 2.2"
 #define AUTHOR  "christophe BOBILLE Locoduino : christophe.bobille@gmail.com"
 
 #define PIN_PWM GPIO_NUM_12                  // ENABLE (PWM)
@@ -13,7 +13,7 @@
 /*------------- Configure your own settings ---------------*/
 
 // Define communication interface : 0 = Serial Port, 1 = Wifi
-#define COMM_INTERFACE 1 // Select mode
+#define COMM_INTERFACE 0 // Select mode
 //-----------------------------------------------------------
 #if COMM_INTERFACE == 0 // USB serial
 #define INTERFACE HardwareSerial
@@ -23,8 +23,11 @@
 #define INTERFACE WiFiClient
 
 //------ If WiFi, replace with your network credentials -----
-#define WIFI_SSID "REPLACE_WITH_YOUR_SSID"
-#define WIFI_PSW "REPLACE_WITH_YOUR_PASSWORD"
+// #define WIFI_SSID "REPLACE_WITH_YOUR_SSID"
+// #define WIFI_PSW "REPLACE_WITH_YOUR_PASSWORD"
+
+#define WIFI_SSID "Livebox-BC90"
+#define WIFI_PSW "V9b7qzKFxdQfbMT4Pa"
 
 #define LOCAL_IP 192, 168, 1, 200
 #define LOCAL_GATEWAY 192, 168, 1, 1

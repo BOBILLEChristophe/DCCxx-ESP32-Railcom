@@ -58,6 +58,10 @@
         v 1.9 - 23 mars 2023  : Optimisation du code
         v 2.0 - 09 oct 2023   : Correction bug sur pointeur CLIENT en TCP (WiFi)
         v 2.1 - 09 oct 2023   : Modification de CURRENT_MONITOR_PIN_MAIN  sur GPIO_NUM_36
+        v 2.2 - 24 fev 2024   : Ajouts de commandes CAN et modification du filtre CAN
+
+        Un programme de test dour les commandes en CAN est disponible ici :
+        https://github.com/BOBILLEChristophe/Test_CommCan_LaBox.git
 */
 
 #ifndef ARDUINO_ARCH_ESP32
@@ -108,8 +112,9 @@ void setup()
   ACAN_ESP32_Settings settings(CAN_BITRATE);
   settings.mRxPin = CAN_RX;
   settings.mTxPin = CAN_TX;
-  const ACAN_ESP32_Filter filter = ACAN_ESP32_Filter::singleStandardFilter(ACAN_ESP32_Filter::data, 0x1FA, 0);
-  const uint32_t errorCode = ACAN_ESP32::can.begin(settings, filter);
+  const ACAN_ESP32_Filter filter = ACAN_ESP32_Filter::singleExtendedFilter(
+      ACAN_ESP32_Filter::data, 0xF << 23, 0x187FFFFB);
+  uint32_t errorCode = ACAN_ESP32::can.begin(settings, filter);
   if (errorCode == 0)
     Serial.println("Can configuration OK !\n");
   else
@@ -246,16 +251,45 @@ void Task1(void *p)
     }
 #endif
 #ifdef CAN_INTERFACE
-    CANMessage frame;
-    if (ACAN_ESP32::can.receive(frame))
+    CANMessage frameIn;
+    if (ACAN_ESP32::can.receive(frameIn))
     {
-      Serial.println(frame.data[0]);
-      if (frame.data[0] == 0xF0)
+      const uint8_t cmde = (frameIn.id & 0x7F80000) >> 19; // Commande
+      const uint8_t exped = (frameIn.id & 0x7F800) >> 11;  // Expéditeur
+      const uint8_t resp = (frameIn.id & 0x04) >> 2;       // Commande = 0 / Reponse = 1
+
+      //Serial.printf("\n[CanMsg %d]------ Expediteur %d : Commande 0x%0X\n\n", __LINE__, exped, cmde);
+
+      if (frameIn.rtr) // Remote frame
+        ACAN_ESP32::can.tryToSend(frameIn);
+      else
       {
-        //      uint16_t locoAddr = frame.data[1] << 8 + frame.data[2];
-        //      uint8_t locoSpeed = frame.data[3];
-        //      uint8_t locoDir = frame.data[4];
-        dcc.setThrottle((frame.data[1] << 8) + frame.data[2], frame.data[3], frame.data[4]);
+        uint16_t loco = 0;
+        if (cmde < 0xFA)
+          loco = (frameIn.data[0] << 8) + frameIn.data[1];
+
+        switch (cmde) // Fonction appelée
+        {
+        case 0xF0:
+          dcc.setThrottle(loco, frameIn.data[2], frameIn.data[3]);
+          //xQueueSendToBack(xQueue, &frameIn, 0);
+          break;
+        case 0xF1:
+          dcc.setFunction(loco, frameIn.data[2], frameIn.data[3]); // frame.data[2] = fonction, frame.data[3] : 'on' ou 'off'
+          break;
+        // case 0xF7:
+        //   // WRITE CV on MAIN <w CAB CV VALUE>
+        //   dcc.writeCVByteMain(loco, frameIn.data[2], frameIn.data[3]);
+        //   break;
+        case 0xFE:
+          dcc.setMainPower(frameIn.data[0]);
+          //xQueueSendToBack(xQueue, &frameIn, 0);
+          break;
+        case 0xFF:
+          dcc.setThrottle(0, 1, 1); // emergency stop
+          //xQueueSendToBack(xQueue, &frameIn, 0);
+          break;
+        }
       }
     }
 #endif

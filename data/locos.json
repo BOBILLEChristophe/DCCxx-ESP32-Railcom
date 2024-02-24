@@ -1,0 +1,50 @@
+[
+	{
+		"id": 0,
+		"nom": "231 G",
+		"address": 7,
+		"register": 2,
+		"direction": 1,
+		"speed": 0,
+		"fn": [0, 0, 0, 0, 0],
+		"fnName": ["Bruit exploit.", "Sifflet 1", "Fumée", "Vapeur cylindres", "Feux"],
+		"volumeSon": 100,
+		"volumeSonMax": 192
+	},
+	{
+		"id": 1,
+		"nom": "XBD-5830",
+		"address": 4,
+		"register": 4,
+		"direction": 1,
+		"speed": 0,
+		"fn": [0, 0, 0, 0, 0],
+		"fnName": ["Moteur", "Sifflet aigu", "Sifflet 2 tons", "Sifflet départ", "Eclairage frontal"],
+		"volumeSon": 100,
+		"volumeSonMax": 192
+	},
+	{
+		"id": 2,
+		"nom": "BB33 + BB54 Maurienne",
+		"address": 10,
+		"register": 1,
+		"direction": 1,
+		"speed": 0,
+		"fn": [0, 0, 0, 0, 0],
+		"fnName": ["Bruit exploit.", "Avertisseur 2 tons", "Avertisseur 1 ton", "Compresseur", "Feux"],
+		"volumeSon": 100,
+		"volumeSonMax": 192
+	},
+	{
+		"id": 3,
+		"nom": "241 P",
+		"address": 12,
+		"register": 9,
+		"direction": 1,
+		"speed": 0,
+		"fn": [0, 0, 0, 0, 0],
+		"fnName": ["Bruit exploit.", "Sifflet 1", "Fumée", "Vapeur cylindres", "Feux"],
+		"volumeSon": 100,
+		"volumeSonMax": 192
+	}
+]

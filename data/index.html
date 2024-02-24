@@ -1,0 +1,368 @@
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8" />
+<script src="jquery.min.js"></script>
+<script src="socket.io.js"></script>
+
+<link rel="stylesheet" href="bootstrap-theme.min.css">
+
+<style>
+
+input, button, select {
+	margin: 6px;
+}
+#container {
+	border: 1px dotted;
+	width: 380px;
+	padding: 20px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 20px;
+	height: auto;
+}
+body, td, th {
+	font-family: Verdana, Geneva, sans-serif;
+}
+.yellowColor {
+	color: #F90;
+}
+.redColor {
+	color: #F00;
+}
+.greenColor {
+	color: #090;
+}
+input[type=range] {
+	cursor: pointer;
+	width: 80%;
+}
+#log {
+	color: #ff0000;
+}
+
+</style>
+
+<script>
+// Variables globales
+var urlDccpp = "http://192.168.1.200:2560/" 	// IP de votre Arduino contenant le sketch DCC++
+var socket = io.connect('http://localhost:8080');
+var locomotives = {};
+
+var powerStatus = 0; // Alimentation électrique sur "off" au début
+var curId = null; // "currentId" L'identifiant de la loco qui est sélectionnée lors de l'utilisation
+// dont la valeur est pour l'instant mise à "null"
+
+
+document.addEventListener('DOMContentLoaded', setup, false); // Ecouteur sur chargement de la page -> appele la fonction "setup" ci dessous
+
+
+function setup () { // Initialise au chargement de la page les éléments du DOM, cases à cocher, champs de saisie etc...
+	$('#prev').html("");
+	$('#speedSlider').val(0); 
+	$('#speed').val(0);			
+	$('#direction').val(1);		
+	$('#address').val(0);
+	$('#register').val(0);
+	
+	// Requete sur le fichier json des locomotives
+	//var param = "<D 3>";
+	//sendReq(setLocos, urlDccpp, param);
+
+	$.ajax({
+	  type: "POST",
+	  url: "locos.json",
+	  //data: param,
+	  dataType: "text",
+	  success: function (data) {
+            setLocos (data);
+        }
+	});
+
+
+	
+	// Installation d'un écouteur sur le slider son
+	document.getElementById('volumeSlider').addEventListener('change', setVolume, false);
+}
+
+function setLocos (data) {
+	locomotives = jQuery.parseJSON(data); // objet "locomotives" contenant les informations sur les locomotives.
+	menuLoco(locomotives);	// Création du menu déroulant
+	console.log(locomotives);
+}
+
+function setVolume () { // Executé lorsque l'écouteur installé ci-dessus capte un événement
+	$('#volume').val($('#volumeSlider').val());
+	locomotives[curId].volumeSon = $('#volume').val();
+}
+
+menuLoco = function (locomotives) {
+	// Pour chaque élément de l'objet "locomotives", création d'une ligne de menu
+	for( var i = 0; i < locomotives.length; i++) {
+			$('#locos').append('<option value="'+ locomotives[i].id +'">'+ locomotives[i].nom +'</option>');
+	}
+}
+
+checkLoco = function (x) { // Choix dans le menu déroulant 
+//-> initialisation d'un certain nombre de variables et de champs correspondants à la loco sélectionnée
+	curId = locomotives[x].id; // curId est l'identifiant unique de la loco sélectionnée
+	$('#address').val(locomotives[x].address); // Affectation de leur valeurs respectives aux éléments du DOM
+	$('#register').val(locomotives[x].register);
+	$('#direction').val(locomotives[x].direction);
+	$('#speed').val(locomotives[x].speed);
+	$('#speedSlider').val(locomotives[x].speed);
+	for(var i = 0; i < locomotives[x].fnName.length; i++) {
+		if(locomotives[x].fn[i] == 1) $('#F'+[i]).prop("checked", true);
+		else $('#F'+[i]).prop("checked", false);
+		$('#fnName'+i).val(locomotives[x].fnName[i]);
+	}
+	$('#volumeSlider').attr("max", locomotives[x].volumeSonMax);// Mise à jour du niveau max volume pour la loco sélectionnée
+	$('#volumeSlider').val(locomotives[x].volumeSon);
+	setVolume()
+	changeBtnDirection(locomotives[x].direction) // Fonction qui change la couleur des boutons de direction
+}
+
+changeBtnDirection = function (sens) {
+	if(sens == 0) {
+		$('#direction').val(0);
+		$( "#rearward" ).addClass( "greenColor" );
+		$( "#forward" ).removeClass( "greenColor" );
+	}
+	else {
+		$('#direction').val(1);
+		$( "#forward" ).addClass( "greenColor" );
+		$( "#rearward" ).removeClass( "greenColor" );
+	}
+	$( "#forward" ).blur();
+	$( "#rearward" ).blur();
+}
+
+
+setDirection = function (sens) { // Quand on a cliqué sur l'un ou l'autre des boutons de direction
+	changeBtnDirection(sens); // On change la couleur, fonction ci-dessus
+	locomotives[curId].direction = sens; // On met le sens à jour dans l'objet "locomotives"
+	setThrottle(); // ... et on appele la fonction qui va envoyer l'information à DCC++
+}
+
+setPower = function () { // On / Off de DCC++
+	var param = ""
+	powerStatus = !powerStatus; // On inverse l'état
+	if(powerStatus) {
+		$( "#power" ).addClass( "greenColor" );// Selon l'état du bouton, on change sa couleur
+		$( "#power" ).removeClass( "redColor" );
+	}
+	else {
+		$( "#power" ).addClass( "redColor" );
+		$( "#power" ).removeClass( "greenColor" );
+	}
+	$( "#power" ).blur(); // Desactivation du blur sur le bouton
+	param = "<"+Number(powerStatus)+">"; // Formatage spécifique du message pour DCC++
+	sendReq(showResponse, urlDccpp, param); //... et on appele la fonction qui va envoyer l'information à DCC++
+}
+
+setThrottle = function (direction, speed) { // Commande DCC++ pour la traction
+
+	if(locomotives[curId].address > 0 && locomotives[curId].register > 0) {  // address et register sont != de 0
+		if(direction != undefined) locomotives[curId].direction = direction;
+		else locomotives[curId].direction = $('#direction').val();
+		if(speed != undefined) locomotives[curId].speed = speed;
+		else locomotives[curId].speed = $('#speedSlider').val();
+		var register = locomotives[curId].register;
+		var address = locomotives[curId].address;
+		var speed = locomotives[curId].speed;
+		var direction = locomotives[curId].direction;
+		$('#speed').val(locomotives[curId].speed);
+		$('#speedSlider').val(locomotives[curId].speed);
+		var param = "?<t "+register+" "+address+" "+speed+" "+direction+">";
+		sendReq(showResponse, urlDccpp, param); //... et on appele la fonction qui va envoyer l'information à DCC++
+	}
+	else {
+		alert("Vous devez sélectionner une locomotive !");
+		$('#speed').val(0);
+		$('#speedSlider').val(0);
+	}
+}
+
+setFunction = function (a) { // Commande DCC++ pour les fonctions
+	
+	if(locomotives[curId].address > 0 && locomotives[curId].register > 0) {  // address et register sont != de 0
+		var res = 0;
+		var param = "";
+		var param = "<f "; // Formatage spécifique du message pour DCC++
+		param += locomotives[curId].address; // On met l'adresse de la loco dans le message
+		param += " ";
+
+		for( var i = a; i < arguments.length; i++) {
+			res += $('#F'+[i]).prop( "checked" ) ? Math.pow(2, i) : 0;
+			locomotives[curId].fn[i] = res;
+		}
+		switch (a) {
+			// Tous les cas pour les 28 fonctions disponibles dans DCC++ sont ici programmées
+			// même si dans cet exemple nous n'avons utilisé que 5 fonctions (F0 à F4)
+			case 0:
+				param += 128 + res;
+				break;
+			case 5:
+				param += 176 + res;
+				break;
+			case 9:
+				param += 160 + res;
+				break;
+			case 13:
+				param += 222;
+				param += " ";
+				param += res;
+				break;
+			case 21:
+				param += 223;
+				param += " ";
+				param += res;
+				break;
+		}
+		param += ">";
+		sendReq(showResponse, urlDccpp, param); //... et on appele la fonction qui va envoyer l'information à DCC++
+	}
+	else alert("Vous devez sélectionner une locomotive !");
+}
+
+setCv = function (cv, value) {
+	if(locomotives[curId].address > 0 && locomotives[curId].register > 0) {
+		var param = "";
+		var param = "<w "; // Formatage spécifique du message pour DCC++
+		param += locomotives[curId].address; // On met l'adresse de la loco dans le message
+		param += " ";
+		param += cv;
+		param += " ";
+		param += value;
+		param += ">";
+		sendReq(showResponse, urlDccpp, param); //... et on appele la fonction qui va envoyer l'information à DCC++
+	}
+	else alert("Vous devez sélectionner une locomotive !");
+};
+
+sendReq = function (callback, url, param) {
+	// C'est la fonction d'envoi des données à à DCC++
+	// le premier paramétre "callback" sert à désigner la fonction qui sera appelée en cas de succès
+	// Ici pour tous les envois, c'est la fonction "showResponse()" qui sert à afficher le callback de DCC++
+	// $.ajax({
+	//   type: "POST",
+	//   url: url,
+	//   data: param,
+	//   dataType: "text",
+	//   success: function (data) {
+ //            callback(data);
+ //        }
+	// });
+	socket.emit('message', param);
+}
+
+socket.on('message', function(message) {
+	$('#log').val(message);
+	setTimeout(clearShowResponse, 2000);   // ... pendant 2 secondes
+});
+
+
+// Quand les paquets ont étés envoyés, fonction qui permet l'affichage du callback...
+showResponse = function (response) {
+	$('#log').val(response);
+	setTimeout(clearShowResponse, 2000);   // ... pendant 2 secondes
+};
+
+clearShowResponse = function () {
+	$('#log').val("");
+};
+
+</script>
+
+<title>My DCC++ controller</title>
+</head>
+
+
+<!--Début de la page affichée-->
+<body>
+<div id="container">
+  <p>
+    <button type='button' id='power' class="glyphicon glyphicon-off btn btn-default redColor" onClick="setPower()"> </button>
+    Power </p>
+  <p>
+    <button type="button" class="glyphicon glyphicon-alert btn btn-default yellowColor" id='e-Stop' onClick="setThrottle(1, -1)"></button>
+    e-Stop </p>
+     <p>
+    <label for='log'>Logs</label>
+    <input name='' type='text' id='log' value="" size="30" />
+  </p>
+  <p>
+    <select id="locos" name="locos" onchange="checkLoco($(this).val());">
+      <option value="">-- Locomotives --</option>
+    </select>
+  </p>
+  <!--<p>
+    <label for='address'>Adresse</label>
+    <input name='' type='text' id='address' value="" size="" readOnly />
+  </p>-->
+  <!--<p>
+    <label for='register'>Registre</label>
+    <input name='' type='text' id='register' value="" size="" readOnly />
+  </p>-->
+  
+  <p> Sens
+    <button type='button' id='rearward' class="glyphicon glyphicon-chevron-left btn btn-default" onClick="setDirection(0)"></button>
+    <button type='button' id='forward' class="glyphicon glyphicon-chevron-right btn btn-default" onClick="setDirection(1)"></button>
+    <input name='' type='hidden' id='direction' value="1" size="1" />
+  </p>
+  <p> Stop
+    <button type='button' id='stop' class="glyphicon glyphicon-stop btn btn-default" onClick="setThrottle(1, 0)"></button>
+  </p>
+  <div class="row">
+    <div class="col-md-2">Vitesse</div>
+    <div class="col-md-8">
+      <input id="speedSlider" type="range" min="0" max="126" value="" class="" onChange="setThrottle()" />
+    </div>
+    <div class="col-md-2">
+      <input id="speed" type="text" readOnly value="" size="3" />
+    </div>
+  </div>
+  <p><!--La fonction "lumières" est toujours F4 bien qu'on la présente en premier-->
+    <input type='checkbox' id='F4' name='' onClick="setFunction(0, 1, 2, 3, 4)" />
+    <input type='texte' id='fnName4' name='' readonly />
+  </p>
+  <p>
+    <input type='checkbox' id='F0' name='' onClick="setFunction(0, 1, 2, 3, 4)" />
+    <input type='texte' id='fnName0' name='' readonly />
+  </p>
+  <p>
+    <input type='checkbox' id='F1' name='' onClick="setFunction(0, 1, 2, 3, 4)" />
+    <input type='texte' id='fnName1' name='' readonly />
+  </p>
+  <p>
+    <input type='checkbox' id='F2' name='' onClick="setFunction(0, 1, 2, 3, 4)" />
+    <input type='texte' id='fnName2' name='' readonly />
+  </p>
+  <p>
+    <input type='checkbox' id='F3' name='' onClick="setFunction(0, 1, 2, 3, 4)" />
+    <input type='texte' id='fnName3' name='' readonly />
+  </p>
+  <!--
+  	Exemple de ce que peut être la suite des boutons de fonctions <p>
+    <input type='checkbox' id='F5' name='' onClick="setFunction(5, 6, 7, 8)" />
+    <input type='texte' id='fnName5' name='' readonly />
+  </p>
+  <p>
+    <input type='checkbox' id='F6' name='' onClick="setFunction(5, 6, 7, 8)" />
+    <input type='texte' id='fnName6' name='' readonly />
+  </p>
+  etc...
+  -->
+  
+  <div class="row">
+    <div class="col-md-2">Volume</div>
+    <div class="col-md-8">
+      <input id="volumeSlider" type="range" min="0" max="0" value="" class="" onChange="setCv(63, this.value)" />
+    </div>
+    <div class="col-md-2">
+      <input id="volume" type="text" readOnly value="" size="3" />
+    </div>
+  
+</div>
+<!--fin de div container-->
+</div></body>
+</html>

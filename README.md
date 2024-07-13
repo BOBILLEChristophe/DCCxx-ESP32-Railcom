@@ -4,6 +4,10 @@ https://youtu.be/AmGNV-QiFVU
 
 [<img src="[https://i.ytimg.com/vi/Hc79sDi3f0U/maxresdefault.jpg]([https://youtu.be/AmGNV-QiFVU](https://youtu.be/AmGNV-QiFVU))" width="50%">]
 
+[<source src="[https://i.ytimg.com/vi/Hc79sDi3f0U/maxresdefault.jpg]([https://youtu.be/AmGNV-QiFVU](https://youtu.be/AmGNV-QiFVU))" />]
+
+
+
 Ce programme permet la réalisation d'une station de commande DCC en WiFi qui génère le cutout nécessaire pour la détection RailCom
 
    *******************************************************
